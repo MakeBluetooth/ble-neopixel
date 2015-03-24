@@ -3,30 +3,27 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name = "format-detection" content = "telephone=no"/>
-        <!--
-        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width;" />
-        -->
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height" />
         <link rel="stylesheet" type="text/css" href="css/index.css">
         <link rel="stylesheet" type="text/css" href="css/topcoat-mobile-light.min.css">
-        <title>Light Control</title>
+        <title>BLE NeoPixel</title>
         <script src="js/jquery-1.9.1.min.js"></script>
 
     </head>
     <body>
         <div class="topcoat-navigation-bar">
             <div class="topcoat-navigation-bar__item center full">
-                <h1 class="topcoat-navigation-bar__title">LED</h1>
+                <h1 class="topcoat-navigation-bar__title">BLE NeoPixel</h1>
             </div>
         </div>
         <div id="connectionScreen">
-            <ul id="deviceList" class="topcoat-list">      
+            <ul id="deviceList" class="topcoat-list">
             </ul>
-            <div style="margin: 10px">            
+            <div style="margin: 10px">
                 <button class="topcoat-button" id="refreshButton">Refresh</button>
-            </div>            
+            </div>
         </div>
-        
+
         <div id="colorScreen">
             <div>
                 Use sliders to set color.
@@ -50,7 +47,7 @@
                 <a class="topcoat-button--large" id="disconnectButton">Disconnect</a>
             </p>
         </div>
-        <div id="messageDiv">        
+        <div id="messageDiv">
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="js/underscore-min.js"></script>
         <script type="text/javascript" src="js/index.js"></script>

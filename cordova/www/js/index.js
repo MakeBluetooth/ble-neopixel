@@ -1,6 +1,14 @@
 /* jshint quotmark: false, unused: vars, browser: true */
-/* global cordova, console, $, bluetoothSerial, _, refreshButton, deviceList, previewColor, red, green, blue, disconnectButton, connectionScreen, colorScreen, rgbText, messageDiv */
+/* global console, $, ble, _, refreshButton, deviceList, previewColor, red, green, blue, disconnectButton, connectionScreen, colorScreen, rgbText, messageDiv */
 'use strict';
+
+var pixel = {
+    service: '9fd73ae0-b743-48df-9b81-04840eb11b73',
+    color: '9fd73ae1-b743-48df-9b81-04840eb11b73',
+    red: '9fd73ae2-b743-48df-9b81-04840eb11b73',
+    green: '9fd73ae3-b743-48df-9b81-04840eb11b73',
+    blue: '9fd73ae4-b743-48df-9b81-04840eb11b73'
+};
 
 var app = {
     initialize: function() {
@@ -14,26 +22,33 @@ var app = {
 
         // wire buttons to functions
         deviceList.ontouchstart = app.connect; // assume not scrolling
-        refreshButton.ontouchstart = app.list;
+        refreshButton.ontouchstart = app.scan;
         disconnectButton.ontouchstart = app.disconnect;
 
         // throttle changes
         var throttledOnColorChange = _.throttle(app.onColorChange, 200);
         $('input').on('change', throttledOnColorChange);
-        
-        app.list();
+
+        app.scan();
     },
-    list: function(event) {
-        deviceList.firstChild.innerHTML = "Discovering...";
-        app.setStatus("Looking for Bluetooth Devices...");
-        
-        bluetoothSerial.list(app.ondevicelist, app.generateFailureFunction("List Failed"));
+    scan: function(e) {
+        deviceList.innerHTML = ""; // clear the list
+        app.setStatus("Scanning for Bluetooth Devices...");
+
+        ble.startScan([pixel.service],
+            app.onDeviceDiscovered,
+            function() { app.setStatus("Listing Bluetooth Devices Failed"); }
+        );
+
+        // stop scan after 5 seconds
+        setTimeout(ble.stopScan, 5000, app.onScanComplete);
+
     },
     connect: function (e) {
         app.setStatus("Connecting...");
-        var device = e.target.getAttribute('deviceId');
-        console.log("Requesting connection to " + device);
-        bluetoothSerial.connect(device, app.onconnect, app.ondisconnect);        
+        var deviceId = e.target.dataset.deviceId;
+        console.log("Requesting connection to " + deviceId);
+        ble.connect(deviceId, app.onconnect, app.ondisconnect);
     },
     disconnect: function(event) {
         if (event) {
@@ -41,9 +56,10 @@ var app = {
         }
 
         app.setStatus("Disconnecting...");
-        bluetoothSerial.disconnect(app.ondisconnect);
+        ble.disconnect(app.connectedPeripheral.id, app.ondisconnect);
     },
-    onconnect: function() {
+    onconnect: function(peripheral) {
+        app.connectedPeripheral = peripheral;
         connectionScreen.hidden = true;
         colorScreen.hidden = false;
         app.setStatus("Connected.");
@@ -57,7 +73,7 @@ var app = {
         var c = app.getColor();
         rgbText.innerText = c;
         previewColor.style.backgroundColor = "rgb(" + c + ")";
-        app.sendToArduino(c);
+        app.sendToArduino();
     },
     getColor: function () {
         var color = [];
@@ -66,8 +82,19 @@ var app = {
         color.push(blue.value);
         return color.join(',');
     },
-    sendToArduino: function(c) {
-        bluetoothSerial.write("c" + c + "\n");
+    sendToArduino: function() {
+        var value = new Uint8Array(3);
+        value[0] = red.value;
+        value[1] = green.value;
+        value[2] = blue.value;
+        ble.write(app.connectedPeripheral.id, pixel.service, pixel.color, value.buffer,
+            function() {
+                app.setStatus("Set color to " + app.getColorString());
+            },
+            function(error) {
+                app.setStatus("Error setting characteristic " + error);
+            }
+        );
     },
     timeoutId: 0,
     setStatus: function(status) {
@@ -77,48 +104,27 @@ var app = {
         messageDiv.innerText = status;
         app.timeoutId = setTimeout(function() { messageDiv.innerText = ""; }, 4000);
     },
-    ondevicelist: function(devices) {
-        var listItem, deviceId;
+    onDeviceDiscovered: function(device) {
+        var listItem, rssi;
 
-        // remove existing devices
-        deviceList.innerHTML = "";
-        app.setStatus("");
-        
-        devices.forEach(function(device) {
-            listItem = document.createElement('li');
-            listItem.className = "topcoat-list__item";
-            if (device.hasOwnProperty("uuid")) { // TODO https://github.com/don/BluetoothSerial/issues/5
-                deviceId = device.uuid;
-            } else if (device.hasOwnProperty("address")) {
-                deviceId = device.address;
-            } else {
-                deviceId = "ERROR " + JSON.stringify(device);
-            }
-            listItem.setAttribute('deviceId', device.address);            
-            listItem.innerHTML = device.name + "<br/><i>" + deviceId + "</i>";
-            deviceList.appendChild(listItem);
-        });
-
-        if (devices.length === 0) {
-            
-            if (cordova.platformId === "ios") { // BLE
-                app.setStatus("No Bluetooth Peripherals Discovered.");
-            } else { // Android
-                app.setStatus("Please Pair a Bluetooth Device.");
-            }
-
+        console.log(JSON.stringify(device));
+        listItem = document.createElement('li');
+        listItem.dataset.deviceId = device.id;
+        if (device.rssi) {
+            rssi = "RSSI: " + device.rssi + "<br/>";
         } else {
-            app.setStatus("Found " + devices.length + " device" + (devices.length === 1 ? "." : "s."));
+            rssi = "";
         }
+        listItem.innerHTML = device.name + "<br/>" + rssi + device.id;
+        deviceList.appendChild(listItem);
+
+        var deviceListLength = deviceList.getElementsByTagName('li').length;
+        app.setStatus("Found " + deviceListLength + " device" + (deviceListLength === 1 ? "." : "s."));
     },
-    generateFailureFunction: function(message) {
-        var func = function(reason) {
-            var details = "";
-            if (reason) {
-                details += ": " + JSON.stringify(reason);
-            }
-            app.setStatus(message + details);
-        };
-        return func;
+    onScanComplete: function() {
+        var deviceListLength = deviceList.getElementsByTagName('li').length;
+        if (deviceListLength === 0) {
+            app.setStatus("No Bluetooth Peripherals Discovered.");
+        }
     }
 };
