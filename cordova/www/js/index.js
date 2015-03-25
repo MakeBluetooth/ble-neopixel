@@ -110,7 +110,7 @@ var app = {
         value[2] = blue.value;
         ble.write(app.connectedPeripheral.id, pixel.service, pixel.color, value.buffer,
             function() {
-                app.setStatus("Set color to " + app.getColorString());
+                app.setStatus("Set color to " + app.getColor());
             },
             function(error) {
                 app.setStatus("Error setting characteristic " + error);
