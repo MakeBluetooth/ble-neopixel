@@ -48,7 +48,7 @@ var app = {
         app.setStatus("Connecting...");
         var deviceId = e.target.dataset.deviceId;
         console.log("Requesting connection to " + deviceId);
-        ble.connect(deviceId, app.onconnect, app.ondisconnect);
+        ble.connect(deviceId, app.onConnect, app.onDisconnect);
     },
     disconnect: function(event) {
         if (event) {
@@ -56,24 +56,45 @@ var app = {
         }
 
         app.setStatus("Disconnecting...");
-        ble.disconnect(app.connectedPeripheral.id, app.ondisconnect);
+        ble.disconnect(app.connectedPeripheral.id, app.onDisconnect);
     },
-    onconnect: function(peripheral) {
+    onConnect: function(peripheral) {
         app.connectedPeripheral = peripheral;
         connectionScreen.hidden = true;
         colorScreen.hidden = false;
         app.setStatus("Connected.");
+        app.syncUI();
     },
-    ondisconnect: function() {
+    onDisconnect: function() {
         connectionScreen.hidden = false;
         colorScreen.hidden = true;
         app.setStatus("Disconnected.");
     },
+    syncUI: function() {
+        var id = app.connectedPeripheral.id;
+        ble.read(id, pixel.service, pixel.red, function(buffer) {
+            var data = new Uint8Array(buffer);
+            red.value = data[0];
+        });
+        ble.read(id, pixel.service, pixel.green, function(buffer) {
+            var data = new Uint8Array(buffer);
+            green.value = data[0];
+        });
+        ble.read(id, pixel.service, pixel.blue, function(buffer) {
+            var data = new Uint8Array(buffer);
+            blue.value = data[0];
+            app.updatePreview();
+        });
+
+    },
     onColorChange: function (evt) {
+        app.updatePreview();
+        app.sendToArduino();
+    },
+    updatePreview: function() {
         var c = app.getColor();
         rgbText.innerText = c;
         previewColor.style.backgroundColor = "rgb(" + c + ")";
-        app.sendToArduino();
     },
     getColor: function () {
         var color = [];
