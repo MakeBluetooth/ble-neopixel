@@ -30,11 +30,15 @@ BLEDescriptor greenDescriptor = BLEDescriptor("2901", "Green");
 BLEUnsignedCharCharacteristic blueCharacteristic = BLEUnsignedCharCharacteristic("9fd73ae4-b743-48df-9b81-04840eb11b73", BLERead | BLEWrite);
 BLEDescriptor blueDescriptor = BLEDescriptor("2901", "Blue");
 
+BLEUnsignedCharCharacteristic brightnessCharacteristic = BLEUnsignedCharCharacteristic("9fd73ae5-b743-48df-9b81-04840eb11b73", BLERead | BLEWrite);
+BLEDescriptor brightnessDescriptor = BLEDescriptor("2901", "Brightness");
+BLEUnsignedCharCharacteristic switchCharacteristic = BLEUnsignedCharCharacteristic("9fd73ae6-b743-48df-9b81-04840eb11b73", BLERead | BLEWrite);
+BLEDescriptor switchDescriptor = BLEDescriptor("2901", "Power Switch");
+
 #define NUMBER_PIXELS 16
 #define NEO_PIXEL_PIN 6
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMBER_PIXELS, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800);
-uint16_t color;
 
 void setup() {
   Serial.begin(9600);
@@ -45,7 +49,6 @@ void setup() {
   
   pinMode(NEO_PIXEL_PIN, OUTPUT);  
   pixels.begin();
-  pixels.setBrightness(0x3F); // 25%
 
   // set advertised name and service
   blePeripheral.setLocalName("NeoPixels");
@@ -61,6 +64,10 @@ void setup() {
   blePeripheral.addAttribute(greenDescriptor);
   blePeripheral.addAttribute(blueCharacteristic);
   blePeripheral.addAttribute(blueDescriptor);
+  blePeripheral.addAttribute(brightnessCharacteristic);
+  blePeripheral.addAttribute(brightnessDescriptor);
+  blePeripheral.addAttribute(switchCharacteristic);
+  blePeripheral.addAttribute(switchDescriptor);
   
   colorCharacteristic.setEventHandler(BLEWritten, colorCharacteristicWritten);
 
@@ -68,9 +75,16 @@ void setup() {
   redCharacteristic.setEventHandler(BLEWritten, colorChanged);
   greenCharacteristic.setEventHandler(BLEWritten, colorChanged);
   blueCharacteristic.setEventHandler(BLEWritten, colorChanged);
+  
+  brightnessCharacteristic.setEventHandler(BLEWritten, brightnessChanged);
+  switchCharacteristic.setEventHandler(BLEWritten, switchChanged);
 
-  // begin initialization
   blePeripheral.begin();
+
+  // initial brightness and color  
+  brightnessCharacteristic.setValue(0x3F); // 25%
+  blueCharacteristic.setValue(0xFF);
+  repaint();
 }
 
 void loop() {
@@ -94,6 +108,24 @@ void colorChanged(BLECentral& central, BLECharacteristic& characteristic) {
   repaint();
 }
 
+void brightnessChanged(BLECentral& central, BLECharacteristic& characteristic) {
+  pixels.setBrightness(brightnessCharacteristic.value());
+  repaint(); 
+}
+
+void switchChanged(BLECentral& central, BLECharacteristic& characteristic) {
+  if (switchCharacteristic.value() == 1) {
+    // repainting uses the last color and brightness
+    repaint();
+  } else if (switchCharacteristic.value() == 0) {
+    // turn all pixels off
+    for (int i = 0; i < NUMBER_PIXELS; i++) {
+      pixels.setPixelColor(i, 0); 
+    }
+    pixels.show();  
+  }
+}
+
 void repaint() {
   
   uint8_t red = redCharacteristic.value();
@@ -102,14 +134,11 @@ void repaint() {
   
   // keep 24-bit color in sync
   const unsigned char c[] = {red, green, blue};
-  Serial.print("R - ");
-  Serial.print(c[0], HEX);
-  Serial.print(", G - ");
-  Serial.print(c[1], HEX);
-  Serial.print(", B - ");
-  Serial.println(c[2], HEX);
   colorCharacteristic.setValue(c, 3);
-  
+  blePeripheral.poll();
+  switchCharacteristic.setValue(1); // light is on
+
+  // change the color of the lights
   uint32_t color = pixels.Color(red, green, blue);
   for (int i = 0; i < NUMBER_PIXELS; i++) {
     pixels.setPixelColor(i, color); 
