@@ -15,7 +15,7 @@
 // BLE Shield 2.x
 #define BLE_REQ 9
 #define BLE_RDY 8
-#define BLE_RST UNUSED
+#define BLE_RST 7
 
 BLEPeripheral blePeripheral = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
 BLEService neoPixelService = BLEService("9fd73ae0-b743-48df-9b81-04840eb11b73");
@@ -82,8 +82,11 @@ void loop() {
 void colorCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
   const unsigned char* color = characteristic.value();
   redCharacteristic.setValue(color[0]);
+  blePeripheral.poll();
   greenCharacteristic.setValue(color[1]);
+  blePeripheral.poll();
   blueCharacteristic.setValue(color[2]);
+  blePeripheral.poll();
   repaint();
 }
 
