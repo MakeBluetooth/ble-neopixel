@@ -95,10 +95,10 @@ void switchChanged(BLECentral& central, BLECharacteristic& characteristic) {
 
 void repaint() {
   // get the color array from the characteristic  
-  const unsigned char* color = colorCharacteristic.value();
-  uint8_t red = color[0];
-  uint8_t green = color[1];
-  uint8_t blue = color[2];
+  const unsigned char* rgb = colorCharacteristic.value();
+  uint8_t red = rgb[0];
+  uint8_t green = rgb[1];
+  uint8_t blue = rgb[2];
 
   // change the color of the lights
   uint32_t color = pixels.Color(red, green, blue);
