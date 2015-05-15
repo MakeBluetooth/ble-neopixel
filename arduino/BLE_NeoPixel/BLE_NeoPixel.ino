@@ -1,6 +1,6 @@
 // BLE NeoPixel
 //
-// RedBear Lab BLE Shield http://redbearlab.com/bleshield/
+// Bluefruit LE http://adafru.it/1697
 // NeoPixels LEDs http://adafru.it/1463
 // arduino-BLEPeripheral https://github.com/sandeepmistry/arduino-BLEPeripheral.git
 // Adafruit NeoPixel Driver https://github.com/adafruit/Adafruit_NeoPixel
@@ -11,11 +11,9 @@
 
 // See BLE Peripheral documentation for setting for your hardware
 // https://github.com/sandeepmistry/arduino-BLEPeripheral#pinouts
-
-// BLE Shield 2.x
-#define BLE_REQ 9
-#define BLE_RDY 8
-#define BLE_RST 7
+#define BLE_REQ 10
+#define BLE_RDY 2
+#define BLE_RST 9
 
 BLEPeripheral blePeripheral = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
 BLEService neoPixelService = BLEService("9fd73ae0-b743-48df-9b81-04840eb11b73");
@@ -42,9 +40,6 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMBER_PIXELS, NEO_PIXEL_PIN, NEO_G
 
 void setup() {
   Serial.begin(9600);
-#if defined (__AVR_ATmega32U4__)
-  delay(5000);  // leonardo needs delay for Serial to start up 
-#endif
   Serial.println(F("Bluetooth Low Energy NeoPixel"));
   
   pinMode(NEO_PIXEL_PIN, OUTPUT);  
