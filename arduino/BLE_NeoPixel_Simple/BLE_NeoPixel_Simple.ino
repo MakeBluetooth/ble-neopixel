@@ -39,6 +39,7 @@ void setup() {
   pixels.begin();
 
   // set advertised name and service
+  blePeripheral.setDeviceName("NeoPixels");
   blePeripheral.setLocalName("NeoPixels");
   blePeripheral.setAdvertisedServiceUuid(neoPixelService.uuid());
 
