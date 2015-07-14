@@ -139,6 +139,8 @@ void repaint() {
 }
 
 void processSwitchChange() {
+  Serial.print("Switch ");
+  Serial.println(switchCharacteristic.value());
   if (switchCharacteristic.value() == 1) { 
     if (pixels.getBrightness() == 0) {
       setBrightness(DEFAULT_BRIGHTNESS);
@@ -180,6 +182,7 @@ void readEncoder() {
     }
     
     encoderValue = val;
+    Serial.println(encoderValue);
     
     //sync the characteristic
     uint8_t brightness = encoderValue * BRIGHTNESS_PER_CLICK;    
