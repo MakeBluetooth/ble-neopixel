@@ -16,14 +16,13 @@
 #define BLE_RST 9
 
 BLEPeripheral blePeripheral = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
-BLEService neoPixelService = BLEService("9fd73ae0-b743-48df-9b81-04840eb11b73");
+BLEService neoPixelService = BLEService("ccc0");
 
-BLECharacteristic colorCharacteristic = BLECharacteristic("9fd73ae1-b743-48df-9b81-04840eb11b73", BLERead | BLEWrite, 3);
+BLECharacteristic colorCharacteristic = BLECharacteristic("ccc1", BLERead | BLEWrite, 3);
 BLEDescriptor colorDescriptor = BLEDescriptor("2901", "Color (24-bit)");
-
-BLEUnsignedCharCharacteristic brightnessCharacteristic = BLEUnsignedCharCharacteristic("9fd73ae5-b743-48df-9b81-04840eb11b73", BLERead | BLEWrite);
+BLEUnsignedCharCharacteristic brightnessCharacteristic = BLEUnsignedCharCharacteristic("ccc2", BLERead | BLEWrite | BLENotify);
 BLEDescriptor brightnessDescriptor = BLEDescriptor("2901", "Brightness");
-BLEUnsignedCharCharacteristic switchCharacteristic = BLEUnsignedCharCharacteristic("9fd73ae6-b743-48df-9b81-04840eb11b73", BLERead | BLEWrite);
+BLEUnsignedCharCharacteristic switchCharacteristic = BLEUnsignedCharCharacteristic("ccc3", BLERead | BLEWrite | BLENotify);
 BLEDescriptor switchDescriptor = BLEDescriptor("2901", "Power Switch");
 
 #define NUMBER_PIXELS 16
@@ -78,7 +77,9 @@ void colorCharacteristicWritten(BLECentral& central, BLECharacteristic& characte
 
 void brightnessChanged(BLECentral& central, BLECharacteristic& characteristic) {
   pixels.setBrightness(brightnessCharacteristic.value());
-  repaint(); 
+  if (brightnessCharacteristic.value() > 0) {
+    repaint(); 
+  }
 }
 
 void switchChanged(BLECentral& central, BLECharacteristic& characteristic) {

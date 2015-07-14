@@ -29,19 +29,28 @@
                 Use sliders to set color.
             </div>
             <div class="rangeDiv">
-                <input type="range" min="0" max="255" value="0" name="red" id="red" class="topcoat-range"/>
+                <input type="range" min="0" max="255" value="0" name="red" id="red" class="topcoat-range color-range"/>
             </div>
             <div class="rangeDiv">
-                <input type="range" min="0" max="255" value="0" name="green" id="green" class="topcoat-range"/>
+                <input type="range" min="0" max="255" value="0" name="green" id="green" class="topcoat-range color-range"/>
             </div>
             <div class="rangeDiv">
-                <input type="range" min="0" max="255" value="0" name="blue" id="blue" class="topcoat-range"/>
+                <input type="range" min="0" max="255" value="0" name="blue" id="blue" class="topcoat-range color-range"/>
             </div>
 
             <div id="rgbText">
                 &nbsp;
             </div>
             <div id="previewColor">
+            </div>
+            <div class="rangeDiv">
+                <input type="range" min="0" max="255" value="0" name="brightness" id="brightness" class="topcoat-range"/>
+            </div>
+            <div>
+              <label class="topcoat-switch">
+                <input id="powerSwitch" type="checkbox" class="topcoat-switch__input">
+                <div class="topcoat-switch__toggle"></div>
+              </label>
             </div>
             <p>
                 <a class="topcoat-button--large" id="disconnectButton">Disconnect</a>

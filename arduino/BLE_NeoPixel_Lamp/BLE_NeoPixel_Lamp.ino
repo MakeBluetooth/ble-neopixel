@@ -31,8 +31,8 @@ BLEDescriptor switchDescriptor = BLEDescriptor("2901", "Power Switch");
 #define NUMBER_PIXELS 16
 #define NEO_PIXEL_PIN 6
 
-#define PIN_ENCODER_A 4
-#define PIN_ENCODER_B 3
+#define PIN_ENCODER_A 3
+#define PIN_ENCODER_B 4
 #define BRIGHTNESS_PER_CLICK 3
 
 #define BUTTON_PIN 7
@@ -47,7 +47,7 @@ long previousMillis = 0;  // stores the last time sensor was read
 long interval = 100;      // interval at which to read sensor (milliseconds)
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMBER_PIXELS, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800);
-Encoder encoder(PIN_ENCODER_B, PIN_ENCODER_A);
+Encoder encoder(PIN_ENCODER_A, PIN_ENCODER_B);
 
 void setup() {
   Serial.begin(9600);
@@ -143,6 +143,7 @@ void processSwitchChange() {
   Serial.println(switchCharacteristic.value());
   if (switchCharacteristic.value() == 1) { 
     if (pixels.getBrightness() == 0) {
+      // TODO this need to fire change event
       setBrightness(DEFAULT_BRIGHTNESS);
     }
     repaint();

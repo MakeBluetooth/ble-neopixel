@@ -1,13 +1,15 @@
 /* jshint quotmark: false, unused: vars, browser: true */
-/* global console, $, ble, _, refreshButton, deviceList, previewColor, red, green, blue, disconnectButton, connectionScreen, colorScreen, rgbText, messageDiv */
+/* global console, $, ble, _, refreshButton, deviceList, previewColor, red, green, blue, disconnectButton, connectionScreen, colorScreen, rgbText, messageDiv, powerSwitch, brightness */
 'use strict';
 
 var pixel = {
     service: '9fd73ae0-b743-48df-9b81-04840eb11b73',
     color: '9fd73ae1-b743-48df-9b81-04840eb11b73',
-    red: '9fd73ae2-b743-48df-9b81-04840eb11b73',
-    green: '9fd73ae3-b743-48df-9b81-04840eb11b73',
-    blue: '9fd73ae4-b743-48df-9b81-04840eb11b73'
+    // red: '9fd73ae2-b743-48df-9b81-04840eb11b73',
+    // green: '9fd73ae3-b743-48df-9b81-04840eb11b73',
+    // blue: '9fd73ae4-b743-48df-9b81-04840eb11b73',
+    brightness: '9fd73ae5-b743-48df-9b81-04840eb11b73',
+    switch: '9fd73ae6-b743-48df-9b81-04840eb11b73'
 };
 
 var app = {
@@ -25,9 +27,15 @@ var app = {
         refreshButton.ontouchstart = app.scan;
         disconnectButton.ontouchstart = app.disconnect;
 
-        // throttle changes
+        // throttle color changes
         var throttledOnColorChange = _.throttle(app.onColorChange, 200);
-        $('input').on('change', throttledOnColorChange);
+        $('.color-range').on('change', throttledOnColorChange);
+
+        // throttle brightness changes
+        var throttledOnBrightnessChange = _.throttle(app.onBrightnessChange, 200);
+        $('#brightness').on('change', throttledOnBrightnessChange);
+
+        powerSwitch.onchange = app.onSwitchChange;
 
         app.scan();
     },
@@ -72,24 +80,36 @@ var app = {
     },
     syncUI: function() {
         var id = app.connectedPeripheral.id;
-        ble.read(id, pixel.service, pixel.red, function(buffer) {
+        ble.read(id, pixel.service, pixel.color, function(buffer) {
             var data = new Uint8Array(buffer);
             red.value = data[0];
-        });
-        ble.read(id, pixel.service, pixel.green, function(buffer) {
-            var data = new Uint8Array(buffer);
-            green.value = data[0];
-        });
-        ble.read(id, pixel.service, pixel.blue, function(buffer) {
-            var data = new Uint8Array(buffer);
-            blue.value = data[0];
+            green.value = data[1];
+            blue.value = data[2];
             app.updatePreview();
         });
+        ble.read(id, pixel.service, pixel.brightness, function(buffer) {
+            var data = new Uint8Array(buffer);
+            brightness.value = data[0];
+        });
+        ble.read(id, pixel.service, pixel.switch, function(buffer) {
+          var data = new Uint8Array(buffer);
+          powerSwitch.checked = data[0] !== 0;
+        });
+
+// notification
+ble.startNotification(id, pixel.service, pixel.brightness, function(buffer) {
+    var data = new Uint8Array(buffer);
+    brightness.value = data[0];
+});
+ble.startNotification(id, pixel.service, pixel.switch, function(buffer) {
+  var data = new Uint8Array(buffer);
+  powerSwitch.checked = data[0] !== 0;
+});
 
     },
     onColorChange: function (evt) {
         app.updatePreview();
-        app.sendToArduino();
+        app.sendColorToArduino();
     },
     updatePreview: function() {
         var c = app.getColor();
@@ -103,7 +123,7 @@ var app = {
         color.push(blue.value);
         return color.join(',');
     },
-    sendToArduino: function() {
+    sendColorToArduino: function() {
         var value = new Uint8Array(3);
         value[0] = red.value;
         value[1] = green.value;
@@ -116,6 +136,38 @@ var app = {
                 app.setStatus("Error setting characteristic " + error);
             }
         );
+    },
+    onBrightnessChange: function(evt) {
+      // this is the slider changing
+      var value = new Uint8Array(1);
+      value[0] = brightness.value;
+      ble.write(app.connectedPeripheral.id, pixel.service, pixel.brightness, value.buffer,
+          function() {
+              app.setStatus("Set brightness to " +  brightness.value);
+          },
+          function(error) {
+              app.setStatus("Error setting characteristic " + error);
+          }
+      );
+    },
+    onSwitchChange: function(evt) {
+      // this is the UI changing
+      var value = new Uint8Array(1);
+      if (powerSwitch.checked) {
+        // turn on
+        value[0] = 1;
+      } else {
+        // turn off
+        value[0] = 0;
+      }
+      ble.write(app.connectedPeripheral.id, pixel.service, pixel.switch, value.buffer,
+          function() {
+              app.setStatus("Set switch to " +  value[0]);
+          },
+          function(error) {
+              app.setStatus("Error setting characteristic " + error);
+          }
+      );
     },
     timeoutId: 0,
     setStatus: function(status) {
