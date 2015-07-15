@@ -54,8 +54,8 @@ void setup() {
   
   // handlers for when clients change data
   colorCharacteristic.setEventHandler(BLEWritten, colorCharacteristicWritten);
-  brightnessCharacteristic.setEventHandler(BLEWritten, brightnessChanged);
-  switchCharacteristic.setEventHandler(BLEWritten, switchChanged);
+  brightnessCharacteristic.setEventHandler(BLEWritten, brightnessCharacteristicWritten);
+  switchCharacteristic.setEventHandler(BLEWritten, switchCharacteristicWritten);
 
   blePeripheral.begin();
 
@@ -65,7 +65,7 @@ void setup() {
   const unsigned char initialColor[3] = {0x00, 0x00, 0xFF}; // red, green, blue
   colorCharacteristic.setValue(initialColor, sizeof(initialColor));
 
-  repaint();
+  updateLights();
 }
 
 void loop() {
@@ -74,30 +74,19 @@ void loop() {
 }
 
 void colorCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
-  repaint();
+  updateLights();
 }
 
-void brightnessChanged(BLECentral& central, BLECharacteristic& characteristic) {
+void brightnessCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
   pixels.setBrightness(brightnessCharacteristic.value());
-  if (brightnessCharacteristic.value() > 0) {
-    repaint(); 
-  }
+  updateLights(); 
 }
 
-void switchChanged(BLECentral& central, BLECharacteristic& characteristic) {
-  if (switchCharacteristic.value() == 1) {
-    // repainting uses the last color and brightness
-    repaint();
-  } else if (switchCharacteristic.value() == 0) {
-    // turn all pixels off
-    for (int i = 0; i < NUMBER_PIXELS; i++) {
-      pixels.setPixelColor(i, 0); 
-    }
-    pixels.show();  
-  }
+void switchCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
+  processSwitchChange();
 }
 
-void repaint() {
+void updateLights() {
   // get the color array from the characteristic  
   const unsigned char* rgb = colorCharacteristic.value();
   uint8_t red = rgb[0];
@@ -110,8 +99,30 @@ void repaint() {
     pixels.setPixelColor(i, color); 
   }
   pixels.show();
-  
-  // TODO fix logic. Brightness 0 is off. Brightness > 0, will turn light on when off
-  switchCharacteristic.setValue(1); // light is on
+
+  // ensure the switch characteristic is correct
+  if (switchCharacteristic.value() == 0 && pixels.getBrightness() > 0) {
+    switchCharacteristic.setValue(1); // light is on    
+  } else if (pixels.getBrightness() == 0 && switchCharacteristic.value() == 1) {
+    switchCharacteristic.setValue(0); // light is off
+  }
 }
+
+void processSwitchChange() {
+  if (switchCharacteristic.value() == 1) {
+    if (pixels.getBrightness() == 0) {
+        brightnessCharacteristic.setValue(DEFAULT_BRIGHTNESS);
+        pixels.setBrightness(DEFAULT_BRIGHTNESS);
+    }
+    // updateLights uses the last color and brightness
+    updateLights();
+  } else if (switchCharacteristic.value() == 0) {
+    // turn all pixels off
+    for (int i = 0; i < NUMBER_PIXELS; i++) {
+      pixels.setPixelColor(i, 0); 
+    }
+    pixels.show();  
+  }
+}
+
 

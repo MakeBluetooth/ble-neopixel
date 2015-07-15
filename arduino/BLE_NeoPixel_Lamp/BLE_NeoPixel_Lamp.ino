@@ -18,27 +18,25 @@
 #define BLE_RST 9
 
 BLEPeripheral blePeripheral = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
-BLEService neoPixelService = BLEService("9fd73ae0-b743-48df-9b81-04840eb11b73");
+BLEService neoPixelService = BLEService("ccc0");
 
-BLECharacteristic colorCharacteristic = BLECharacteristic("9fd73ae1-b743-48df-9b81-04840eb11b73", BLERead | BLEWrite, 3);
+BLECharacteristic colorCharacteristic = BLECharacteristic("ccc1", BLERead | BLEWrite, 3);
 BLEDescriptor colorDescriptor = BLEDescriptor("2901", "Color (24-bit)");
-
-BLEUnsignedCharCharacteristic brightnessCharacteristic = BLEUnsignedCharCharacteristic("9fd73ae5-b743-48df-9b81-04840eb11b73", BLERead | BLEWrite | BLENotify);
+BLEUnsignedCharCharacteristic brightnessCharacteristic = BLEUnsignedCharCharacteristic("ccc2", BLERead | BLEWrite | BLENotify);
 BLEDescriptor brightnessDescriptor = BLEDescriptor("2901", "Brightness");
-BLEUnsignedCharCharacteristic switchCharacteristic = BLEUnsignedCharCharacteristic("9fd73ae6-b743-48df-9b81-04840eb11b73", BLERead | BLEWrite | BLENotify);
+BLEUnsignedCharCharacteristic switchCharacteristic = BLEUnsignedCharCharacteristic("ccc3", BLERead | BLEWrite | BLENotify);
 BLEDescriptor switchDescriptor = BLEDescriptor("2901", "Power Switch");
 
 #define NUMBER_PIXELS 16
 #define NEO_PIXEL_PIN 6
+#define DEFAULT_BRIGHTNESS 0x3F // 25%
+#define MAX_BRIGHTNESS 0xFF
 
 #define PIN_ENCODER_A 3
 #define PIN_ENCODER_B 4
 #define BRIGHTNESS_PER_CLICK 3
 
 #define BUTTON_PIN 7
-
-#define DEFAULT_BRIGHTNESS 0x3F // 25%
-#define MAX_BRIGHTNESS 0xFF
 
 uint8_t encoderValue;
 int buttonState = 0;
@@ -75,18 +73,19 @@ void setup() {
   
   // handlers for when clients change data
   colorCharacteristic.setEventHandler(BLEWritten, colorCharacteristicWritten);
-  brightnessCharacteristic.setEventHandler(BLEWritten, brightnessChanged);
-  switchCharacteristic.setEventHandler(BLEWritten, switchChanged);
+  brightnessCharacteristic.setEventHandler(BLEWritten, brightnessCharacteristicWritten);
+  switchCharacteristic.setEventHandler(BLEWritten, switchCharacteristicWritten);
 
   blePeripheral.begin();
 
   // initial brightness and color  
   brightnessCharacteristic.setValue(DEFAULT_BRIGHTNESS);
+  pixels.setBrightness(DEFAULT_BRIGHTNESS);
   setEncoderBrightness(DEFAULT_BRIGHTNESS);
   const unsigned char initialColor[3] = {0x00, 0x00, 0xFF}; // red, green, blue
   colorCharacteristic.setValue(initialColor, sizeof(initialColor));
 
-  repaint();
+  updateLights();
 }
 
 void loop() {
@@ -103,20 +102,20 @@ void loop() {
 }
 
 void colorCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
-  repaint();
+  updateLights();
 }
 
-void brightnessChanged(BLECentral& central, BLECharacteristic& characteristic) {
+void brightnessCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
   pixels.setBrightness(brightnessCharacteristic.value());
   setEncoderBrightness(brightnessCharacteristic.value());
-  repaint(); 
+  updateLights(); 
 }
 
-void switchChanged(BLECentral& central, BLECharacteristic& characteristic) {
+void switchCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
   processSwitchChange();
 }
 
-void repaint() {
+void updateLights() {
   // get the color array from the characteristic  
   const unsigned char* rgb = colorCharacteristic.value();
   uint8_t red = rgb[0];
@@ -130,24 +129,23 @@ void repaint() {
   }
   pixels.show();
 
+  // ensure the switch characteristic is correct
   if (switchCharacteristic.value() == 0 && pixels.getBrightness() > 0) {
     switchCharacteristic.setValue(1); // light is on    
   } else if (pixels.getBrightness() == 0 && switchCharacteristic.value() == 1) {
     switchCharacteristic.setValue(0); // light is off
   }
-
 }
 
 void processSwitchChange() {
-  Serial.print("Switch ");
-  Serial.println(switchCharacteristic.value());
-  if (switchCharacteristic.value() == 1) { 
+  if (switchCharacteristic.value() == 1) {
     if (pixels.getBrightness() == 0) {
         brightnessCharacteristic.setValue(DEFAULT_BRIGHTNESS);
         setEncoderBrightness(DEFAULT_BRIGHTNESS);
         pixels.setBrightness(DEFAULT_BRIGHTNESS);
     }
-    repaint();
+    // updateLights uses the last color and brightness
+    updateLights();
   } else if (switchCharacteristic.value() == 0) {
     // turn all pixels off
     for (int i = 0; i < NUMBER_PIXELS; i++) {
@@ -184,7 +182,7 @@ void readEncoder() {
     uint8_t brightness = encoderValue * BRIGHTNESS_PER_CLICK;    
     brightnessCharacteristic.setValue(brightness);
     pixels.setBrightness(brightness);
-    repaint();
+    updateLights();
   }
 }
 
