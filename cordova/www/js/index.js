@@ -3,13 +3,10 @@
 'use strict';
 
 var pixel = {
-    service: '9fd73ae0-b743-48df-9b81-04840eb11b73',
-    color: '9fd73ae1-b743-48df-9b81-04840eb11b73',
-    // red: '9fd73ae2-b743-48df-9b81-04840eb11b73',
-    // green: '9fd73ae3-b743-48df-9b81-04840eb11b73',
-    // blue: '9fd73ae4-b743-48df-9b81-04840eb11b73',
-    brightness: '9fd73ae5-b743-48df-9b81-04840eb11b73',
-    switch: '9fd73ae6-b743-48df-9b81-04840eb11b73'
+    service: 'ccc0',
+    color: 'ccc1',
+    brightness: 'ccc2',
+    switch: 'ccc3'
 };
 
 var app = {
