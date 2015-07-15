@@ -37,7 +37,7 @@ BLEDescriptor switchDescriptor = BLEDescriptor("2901", "Power Switch");
 
 #define BUTTON_PIN 7
 
-#define DEFAULT_BRIGHTNESS 0x3F
+#define DEFAULT_BRIGHTNESS 0x3F // 25%
 #define MAX_BRIGHTNESS 0xFF
 
 uint8_t encoderValue;
@@ -51,7 +51,7 @@ Encoder encoder(PIN_ENCODER_A, PIN_ENCODER_B);
 
 void setup() {
   Serial.begin(9600);
-  Serial.println(F("Bluetooth Low Energy NeoPixel"));
+  Serial.println(F("Bluetooth Low Energy NeoPixel Lamp"));
 
   // initialize the pushbutton pin as an input:
   pinMode(BUTTON_PIN, INPUT);  
@@ -143,8 +143,9 @@ void processSwitchChange() {
   Serial.println(switchCharacteristic.value());
   if (switchCharacteristic.value() == 1) { 
     if (pixels.getBrightness() == 0) {
-      // TODO this need to fire change event
-      setBrightness(DEFAULT_BRIGHTNESS);
+        brightnessCharacteristic.setValue(DEFAULT_BRIGHTNESS);
+        setEncoderBrightness(DEFAULT_BRIGHTNESS);
+        pixels.setBrightness(DEFAULT_BRIGHTNESS);
     }
     repaint();
   } else if (switchCharacteristic.value() == 0) {
@@ -155,12 +156,6 @@ void processSwitchChange() {
     pixels.show();  
   }
 
-}
-
-void setBrightness(uint8_t brightness) {
-  brightnessCharacteristic.setValue(brightness);
-  setEncoderBrightness(brightness);
-  pixels.setBrightness(brightness);
 }
 
 void setEncoderBrightness(uint8_t brightness) {

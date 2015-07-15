@@ -27,6 +27,7 @@ BLEDescriptor switchDescriptor = BLEDescriptor("2901", "Power Switch");
 
 #define NUMBER_PIXELS 16
 #define NEO_PIXEL_PIN 6
+#define DEFAULT_BRIGHTNESS 0x3F // 25%
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMBER_PIXELS, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
@@ -59,7 +60,8 @@ void setup() {
   blePeripheral.begin();
 
   // initial brightness and color  
-  brightnessCharacteristic.setValue(0x3F); // 25%
+  brightnessCharacteristic.setValue(DEFAULT_BRIGHTNESS);
+  pixels.setBrightness(DEFAULT_BRIGHTNESS);
   const unsigned char initialColor[3] = {0x00, 0x00, 0xFF}; // red, green, blue
   colorCharacteristic.setValue(initialColor, sizeof(initialColor));
 
