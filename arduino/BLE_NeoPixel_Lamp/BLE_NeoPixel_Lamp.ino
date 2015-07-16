@@ -18,6 +18,7 @@
 #define BLE_RST 9
 
 BLEPeripheral blePeripheral = BLEPeripheral(BLE_REQ, BLE_RDY, BLE_RST);
+
 BLEService neoPixelService = BLEService("ccc0");
 
 BLECharacteristic colorCharacteristic = BLECharacteristic("ccc1", BLERead | BLEWrite, 3);
@@ -115,6 +116,24 @@ void switchCharacteristicWritten(BLECentral& central, BLECharacteristic& charact
   processSwitchChange();
 }
 
+void processSwitchChange() {
+  if (switchCharacteristic.value() == 1) {
+    if (pixels.getBrightness() == 0) {
+        brightnessCharacteristic.setValue(DEFAULT_BRIGHTNESS);
+        setEncoderBrightness(DEFAULT_BRIGHTNESS);
+        pixels.setBrightness(DEFAULT_BRIGHTNESS);
+    }
+    // updateLights uses the last color and brightness
+    updateLights();
+  } else if (switchCharacteristic.value() == 0) {
+    // turn all pixels off
+    for (int i = 0; i < NUMBER_PIXELS; i++) {
+      pixels.setPixelColor(i, 0); 
+    }
+    pixels.show();  
+  }
+}
+
 void updateLights() {
   // get the color array from the characteristic  
   const unsigned char* rgb = colorCharacteristic.value();
@@ -135,25 +154,6 @@ void updateLights() {
   } else if (pixels.getBrightness() == 0 && switchCharacteristic.value() == 1) {
     switchCharacteristic.setValue(0); // light is off
   }
-}
-
-void processSwitchChange() {
-  if (switchCharacteristic.value() == 1) {
-    if (pixels.getBrightness() == 0) {
-        brightnessCharacteristic.setValue(DEFAULT_BRIGHTNESS);
-        setEncoderBrightness(DEFAULT_BRIGHTNESS);
-        pixels.setBrightness(DEFAULT_BRIGHTNESS);
-    }
-    // updateLights uses the last color and brightness
-    updateLights();
-  } else if (switchCharacteristic.value() == 0) {
-    // turn all pixels off
-    for (int i = 0; i < NUMBER_PIXELS; i++) {
-      pixels.setPixelColor(i, 0); 
-    }
-    pixels.show();  
-  }
-
 }
 
 void setEncoderBrightness(uint8_t brightness) {
