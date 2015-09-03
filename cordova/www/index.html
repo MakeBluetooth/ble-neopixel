@@ -5,37 +5,30 @@
         <meta name = "format-detection" content = "telephone=no"/>
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height" />
         <link rel="stylesheet" type="text/css" href="css/index.css">
-        <link rel="stylesheet" type="text/css" href="css/topcoat-mobile-light.min.css">
         <title>BLE NeoPixel</title>
-        <script src="js/jquery-1.9.1.min.js"></script>
-
     </head>
     <body>
-        <div class="topcoat-navigation-bar">
-            <div class="topcoat-navigation-bar__item center full">
-                <h1 class="topcoat-navigation-bar__title">BLE NeoPixel</h1>
-            </div>
-        </div>
         <div id="connectionScreen">
-            <ul id="deviceList" class="topcoat-list">
+            <h1>BLE NeoPixel</h1>
+            <ul id="deviceList">
             </ul>
-            <div style="margin: 10px">
-                <button class="topcoat-button" id="refreshButton">Refresh</button>
-            </div>
+            <button id="refreshButton">Refresh</button>
         </div>
 
         <div id="colorScreen">
+            <p>Use sliders to set color.</p>
+            Red
+            <input type="range" min="0" max="255" value="0" id="red"/>
+            Green
+            <input type="range" min="0" max="255" value="0" id="green"/>
+            Blue
+            <input type="range" min="0" max="255" value="0" id="blue"/>
+            Brightness
+            <input type="range" min="0" max="255" value="0" id="brightness" />
             <div>
-                Use sliders to set color.
-            </div>
-            <div class="rangeDiv">
-                <input type="range" min="0" max="255" value="0" name="red" id="red" class="topcoat-range color-range"/>
-            </div>
-            <div class="rangeDiv">
-                <input type="range" min="0" max="255" value="0" name="green" id="green" class="topcoat-range color-range"/>
-            </div>
-            <div class="rangeDiv">
-                <input type="range" min="0" max="255" value="0" name="blue" id="blue" class="topcoat-range color-range"/>
+              <label>
+                <input type="checkbox" class="switch" id="powerSwitch" />Power
+              </label>
             </div>
 
             <div id="rgbText">
@@ -43,25 +36,11 @@
             </div>
             <div id="previewColor">
             </div>
-            <div class="rangeDiv">
-                <input type="range" min="0" max="255" value="0" name="brightness" id="brightness" class="topcoat-range"/>
-            </div>
-            <div>
-              <label class="topcoat-switch">
-                <input id="powerSwitch" type="checkbox" class="topcoat-switch__input">
-                <div class="topcoat-switch__toggle"></div>
-              </label>
-            </div>
-            <p>
-                <a class="topcoat-button--large" id="disconnectButton">Disconnect</a>
-            </p>
+
+            <button id="disconnectButton">Disconnect</button>
         </div>
-        <div id="messageDiv">
+        <div id="messageDiv"></div>
         <script type="text/javascript" src="cordova.js"></script>
-        <script type="text/javascript" src="js/underscore-min.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
-        <script type="text/javascript">
-            app.initialize();
-        </script>
     </body>
 </html>
