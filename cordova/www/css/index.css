@@ -28,10 +28,6 @@ ul {
 	text-align: left;
 }
 
-select {
-    min-width: 200px;
-}
-
 #connectionScreen {
   margin-bottom: 50px;
 }
