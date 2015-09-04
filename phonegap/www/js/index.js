@@ -1,7 +1,7 @@
 // Bluetooth Low Energy NeoPixel Lamp (c) 2015 Don Coleman
 
-// NeoPixel Service UUIDs
-var NEOPIXEL_SERVICE = 'ccc0';
+// LED Service UUIDs
+var LED_SERVICE = 'ccc0';
 var COLOR = 'ccc1';
 var BRIGHTNESS = 'ccc2';
 var POWER_SWITCH = 'ccc3';
@@ -33,8 +33,7 @@ var app = {
         deviceList.innerHTML = ""; // clear the list
         app.setStatus("Scanning for Bluetooth Devices...");
 
-        // iOS and Newer Android
-        ble.startScan([NEOPIXEL_SERVICE],
+        ble.startScan([LED_SERVICE],
             app.onDeviceDiscovered,
             function() { app.setStatus("Listing Bluetooth Devices Failed"); }
         );
@@ -84,12 +83,12 @@ var app = {
         app.syncUI();
 
         // notifications update the UI if the values change on the light
-        ble.startNotification(peripheral.id, NEOPIXEL_SERVICE, BRIGHTNESS, function(buffer) {
+        ble.startNotification(peripheral.id, LED_SERVICE, BRIGHTNESS, function(buffer) {
             var data = new Uint8Array(buffer);
             brightness.value = data[0];
         });
 
-        ble.startNotification(peripheral.id, NEOPIXEL_SERVICE, POWER_SWITCH, function(buffer) {
+        ble.startNotification(peripheral.id, LED_SERVICE, POWER_SWITCH, function(buffer) {
           var data = new Uint8Array(buffer);
           powerSwitch.checked = data[0] !== 0;
         });
@@ -101,20 +100,20 @@ var app = {
         app.setStatus("Disconnected.");
     },
     syncUI: function() {
-      // read values from light and update the phone UI
+        // read values from light and update the phone UI
         var id = app.connectedPeripheral.id;
-        ble.read(id, NEOPIXEL_SERVICE, COLOR, function(buffer) {
+        ble.read(id, LED_SERVICE, COLOR, function(buffer) {
             var data = new Uint8Array(buffer);
             red.value = data[0];
             green.value = data[1];
             blue.value = data[2];
             app.updatePreview();
         });
-        ble.read(id, NEOPIXEL_SERVICE, BRIGHTNESS, function(buffer) {
+        ble.read(id, LED_SERVICE, BRIGHTNESS, function(buffer) {
             var data = new Uint8Array(buffer);
             brightness.value = data[0];
         });
-        ble.read(id, NEOPIXEL_SERVICE, POWER_SWITCH, function(buffer) {
+        ble.read(id, LED_SERVICE, POWER_SWITCH, function(buffer) {
           var data = new Uint8Array(buffer);
           powerSwitch.checked = data[0] !== 0;
         });
@@ -141,7 +140,7 @@ var app = {
         value[0] = red.value;
         value[1] = green.value;
         value[2] = blue.value;
-        ble.write(app.connectedPeripheral.id, NEOPIXEL_SERVICE, COLOR, value.buffer,
+        ble.write(app.connectedPeripheral.id, LED_SERVICE, COLOR, value.buffer,
             function() {
                 app.setStatus("Set color to " + app.getColor());
             },
@@ -154,7 +153,7 @@ var app = {
       // user adjusted the brightness with the slider
       var value = new Uint8Array(1);
       value[0] = brightness.value;
-      ble.write(app.connectedPeripheral.id, NEOPIXEL_SERVICE, BRIGHTNESS, value.buffer,
+      ble.write(app.connectedPeripheral.id, LED_SERVICE, BRIGHTNESS, value.buffer,
           function() {
               app.setStatus("Set brightness to " +  brightness.value);
           },
@@ -171,7 +170,7 @@ var app = {
       } else {
         value[0] = 0; // turn off
       }
-      ble.write(app.connectedPeripheral.id, NEOPIXEL_SERVICE, POWER_SWITCH, value.buffer,
+      ble.write(app.connectedPeripheral.id, LED_SERVICE, POWER_SWITCH, value.buffer,
           function() {
               app.setStatus("Set switch to " +  value[0]);
           },
