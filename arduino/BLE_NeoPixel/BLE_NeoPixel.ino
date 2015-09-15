@@ -21,9 +21,11 @@ BLEService neoPixelService = BLEService("ccc0");
 
 BLECharacteristic colorCharacteristic = BLECharacteristic("ccc1", BLERead | BLEWrite, 3);
 BLEDescriptor colorDescriptor = BLEDescriptor("2901", "Color (24-bit)");
-BLEUnsignedCharCharacteristic brightnessCharacteristic = BLEUnsignedCharCharacteristic("ccc2", BLERead | BLEWrite | BLENotify);
+BLEUnsignedCharCharacteristic brightnessCharacteristic = 
+            BLEUnsignedCharCharacteristic("ccc2", BLERead | BLEWrite | BLENotify);
 BLEDescriptor brightnessDescriptor = BLEDescriptor("2901", "Brightness");
-BLEUnsignedCharCharacteristic switchCharacteristic = BLEUnsignedCharCharacteristic("ccc3", BLERead | BLEWrite | BLENotify);
+BLEUnsignedCharCharacteristic switchCharacteristic = 
+            BLEUnsignedCharCharacteristic("ccc3", BLERead | BLEWrite | BLENotify);
 BLEDescriptor switchDescriptor = BLEDescriptor("2901", "Power Switch");
 
 #define NUMBER_PIXELS 16
@@ -63,7 +65,7 @@ void setup() {
   // initial brightness and color  
   brightnessCharacteristic.setValue(DEFAULT_BRIGHTNESS);
   pixels.setBrightness(DEFAULT_BRIGHTNESS);
-  const unsigned char initialColor[3] = {0x00, 0x00, 0xFF}; // red, green, blue
+  const unsigned char initialColor[3] = {0xFF, 0x00, 0xFF}; // red, green, blue
   colorCharacteristic.setValue(initialColor, sizeof(initialColor));
 
   updateLights();
@@ -74,16 +76,19 @@ void loop() {
   blePeripheral.poll();
 }
 
-void colorCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
+void colorCharacteristicWritten(BLECentral& central, 
+                                BLECharacteristic& characteristic) {
   updateLights();
 }
 
-void brightnessCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
+void brightnessCharacteristicWritten(BLECentral& central, 
+                                     BLECharacteristic& characteristic) {
   pixels.setBrightness(brightnessCharacteristic.value());
   updateLights(); 
 }
 
-void switchCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
+void switchCharacteristicWritten(BLECentral& central, 
+                                 BLECharacteristic& characteristic) {
   processSwitchChange();
 }
 
