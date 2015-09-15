@@ -57,7 +57,8 @@ var app = {
         deviceList.appendChild(listItem);
 
         var deviceListLength = deviceList.getElementsByTagName('li').length;
-        app.setStatus("Found " + deviceListLength + " device" + (deviceListLength === 1 ? "." : "s."));
+        app.setStatus("Found " + deviceListLength + 
+                      " device" + (deviceListLength === 1 ? "." : "s."));
     },
     onScanComplete: function() {
         var deviceListLength = deviceList.getElementsByTagName('li').length;
@@ -88,7 +89,8 @@ var app = {
             brightness.value = data[0];
         });
 
-        ble.startNotification(peripheral.id, LED_SERVICE, POWER_SWITCH, function(buffer) {
+        ble.startNotification(peripheral.id, LED_SERVICE, POWER_SWITCH,
+        function(buffer) {
           var data = new Uint8Array(buffer);
           powerSwitch.checked = data[0] !== 0;
         });
