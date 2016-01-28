@@ -76,19 +76,16 @@ void loop() {
   blePeripheral.poll();
 }
 
-void colorCharacteristicWritten(BLECentral& central, 
-                                BLECharacteristic& characteristic) {
+void colorCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
   updateLights();
 }
 
-void brightnessCharacteristicWritten(BLECentral& central, 
-                                     BLECharacteristic& characteristic) {
+void brightnessCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
   pixels.setBrightness(brightnessCharacteristic.value());
   updateLights(); 
 }
 
-void switchCharacteristicWritten(BLECentral& central, 
-                                 BLECharacteristic& characteristic) {
+void switchCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
   processSwitchChange();
 }
 
