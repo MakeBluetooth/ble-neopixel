@@ -4,7 +4,7 @@ body {
     -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
 
     font-family: "Helvetica Neue";
-    font-weight: lighter;
+    /*font-weight: lighter;*/
 
     text-align: center;
 }
